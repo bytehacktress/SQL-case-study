@@ -1,0 +1,89 @@
+-- Solve the below SQL problems using the Famous Paintings & Museum dataset:
+
+1) Fetch all the paintings which are not displayed on any museums?
+
+SELECT
+		 work_id,
+		 name
+FROM  "work" 
+WHERE museum_id is null
+
+
+2) Are there museuems without any paintings?
+
+SELECT *
+FROM "museum"
+WHERE museum_id NOT IN ( SELECT museum_id FROM "work")
+
+3) How many paintings have an asking price of more than their regular price? 
+
+SELECT * 
+FROM "product_size"
+WHERE sale_price > regular_price
+
+4) Identify the paintings whose asking price is less than 50% of its regular price
+
+SELECT * 
+FROM product_size
+WHERE (regular_price - sale_price) >=  regular_price/2;
+
+5) Which canva size costs the most?
+
+SELECT cs.label as canva, ps.sale_price
+FROM product_size ps
+left join canvas_size cs on cs.size_id = ps.size_id
+ORDER BY sale_price DESC  LIMIT 1;
+
+
+
+6) Identify the museums with invalid city information in the given dataset
+
+SELECT * 
+FROM museum
+WHERE city REGEXP '^[0-9]';
+
+
+7) Find the invalid days from museum_hours.
+
+SELECT museum_id, day 
+FROM museum_hours
+WHERE day NOT IN ('Sunday', 'Saturday', 'Tuesday', 'Wednesday', 'Thursday', 'Monday', 'Friday');
+
+8.) Correct the spelling mistake of Thursday
+
+UPDATE museum_hours
+SET day = 'Thursday'
+WHERE day = 'Thusday';
+
+9) Fetch the top 10 most famous painting subject
+
+SELECT subject, count(work_id) AS no_of_paintings, ROW_NUMBER() OVER (ORDER BY COUNT(1) DESC) AS ranking
+FROM subject
+GROUP BY subject
+order by count(work_id) DESC LIMIT 10;
+
+10) Identify the museums which are open on both Sunday and Monday. Display museum name, city.
+
+SELECT ROW_NUMBER() OVER (ORDER BY m.name) AS number, m.name as museum_name, m.city, m.state,m.country 
+FROM museum m
+JOIN museum_hours mh1 ON m.museum_id = mh1.museum_id AND mh1.day = 'Sunday'
+JOIN museum_hours mh2 ON m.museum_id = mh2.museum_id AND mh2.day = 'Monday';
+
+11) How many museums are open every single day?
+
+SELECT COUNT(*)
+FROM (SELECT museum_id
+FROM museum_hours
+GROUP BY museum_id
+HAVING COUNT(day) = 7) X;
+
+12) List of museums which are open on every single day
+
+SELECT ROW_NUMBER() OVER (ORDER BY name) AS s_no, name, address, city, state, country
+FROM museum
+WHERE museum_id IN 
+	(SELECT museum_id
+	FROM museum_hours
+	GROUP BY museum_id
+	HAVING COUNT(day) = 7);
+
